@@ -48,11 +48,15 @@ def scrape_page(page_num):
         phone.append(others[i + 2].get_text())
         location = others[i + 3].get_text().split('-')
         ward.append(location[0].strip())
-        district.append(location[1].strip())
-        if len(location) == 3:
-            city.append(location[2].strip())
+        if location[1].strip().lower().startswith("tp") or location[1].strip().lower() == 'hà nội':
+            city.append(location[1].strip())
+            district.append('')
         else:
-            city.append('')
+            district.append(location[1].strip())
+            if len(location) == 3:
+                city.append(location[2].strip())
+            else:
+                city.append('')
 
     times = soup.select('.clearfix > .item-re-list > .box-info-list > .price-list > .pull-right')
     for time in times:
