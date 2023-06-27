@@ -4,13 +4,17 @@ import pandas as pd
 import threading
 from queue import Queue
 import os
+from datetime import date as d
+from datetime import datetime
 
 listCarLinks = []
 baseUrl = 'https://batdongsan24h.com.vn/bat-dong-san-ban-tai-viet-nam-s32113/-1/-1/-1?page='
 
 title = []
 area = []
+area_unit = []
 price = []
+price_unit = []
 phone = []
 ward = []
 district = []
@@ -18,7 +22,7 @@ city = []
 date = []
 imageLink = []
 
-dict_ = {'Title': title, 'Area': area, 'Price': price, 'Phone': phone, 'Ward': ward, 'District': district,
+dict_ = {'Title': title, 'Area': area, 'Area Unit': area_unit, 'Price': price, 'Price Unit': price_unit, 'Phone': phone, 'Ward': ward, 'District': district,
          'City': city, 'Date': date, 'ImageLink': imageLink}
 
 
@@ -43,8 +47,17 @@ def scrape_page(page_num):
     others = soup.select('.clearfix > .item-re-list > .box-info-list > .price-list > strong')
 
     for i in range(0, len(others) + 1 - 4, 4):
-        area.append(others[i].get_text())
-        price.append(others[i + 1].get_text())
+        try:
+            area.append(float(others[i].get_text().split(' ')[0]))
+        except ValueError:
+            area.append(others[i].get_text().split(' ')[0])
+        area_unit.append(others[i].get_text().split(' ')[1])
+        if others[i + 1].get_text() == 'Thỏa thuận':
+            price.append('NULL')
+            price_unit.append('NULL')
+        else:
+            price.append(float(others[i + 1].get_text().split(' ')[0]))
+            price_unit.append(others[i + 1].get_text().split(' ')[1])
         phone.append(others[i + 2].get_text())
         location = others[i + 3].get_text().split('-')
         ward.append(location[0].strip())
@@ -60,7 +73,11 @@ def scrape_page(page_num):
 
     times = soup.select('.clearfix > .item-re-list > .box-info-list > .price-list > .pull-right')
     for time in times:
-        date.append(time.get_text().strip())
+        temp = time.get_text().strip()
+        if temp.startswith("Hôm nay"):
+            date.append(d.today())
+        else:
+            date.append(datetime.strptime(temp, '%d/%m/%Y').date())
 
     images = soup.select('.clearfix > .item-re-list > .box-img-thumb > a > img')
     for image in images:
